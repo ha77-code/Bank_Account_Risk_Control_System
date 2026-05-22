@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: Bank_Account_Risk_Control_System_spring
+
+  datasource:
+    url: jdbc:h2:mem:bankdb
+    driver-class-name: org.h2.Driver
+    username: as
+    password: 123456
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  port: 8080
