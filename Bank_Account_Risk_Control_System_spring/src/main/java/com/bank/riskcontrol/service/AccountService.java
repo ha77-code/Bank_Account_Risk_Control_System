@@ -8,6 +8,7 @@ import com.bank.riskcontrol.exception.BusinessException;
 import com.bank.riskcontrol.repository.BankAccountRepository;
 import com.bank.riskcontrol.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.loader.internal.BaseNaturalIdLoadAccessImpl;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class AccountService {
     private final BankAccountRepository bankAccountRepository;
     private final CustomerRepository customerRepository;
+    private final AuditLogService auditLogService;
 
     public AccountResponse createAccount(AccountCreateRequest request) throws BusinessException {
         // 检查客户是否存在
@@ -51,7 +53,11 @@ public class AccountService {
         }
 
         account.setStatus(AccountStatus.FROZEN);
-        return toResponse(bankAccountRepository.save(account));
+        BankAccount saved = bankAccountRepository.save(account);
+
+        //审计日志
+        auditLogService.log("FREEZE", "ACCOUNT", accountNo, "账户已冻结");
+        return toResponse(saved);
     }
 
     public AccountResponse unfreezeAccount(String accountNo) throws BusinessException {
@@ -63,6 +69,10 @@ public class AccountService {
         }
 
         account.setStatus(AccountStatus.ACTIVE);
+        BankAccount saved = bankAccountRepository.save(account);
+
+        //审计日志
+        auditLogService.log("UNFREEZE", "ACCOUNT", accountNo, "账户已解冻");
         return toResponse(bankAccountRepository.save(account));
     }
 
@@ -86,4 +96,5 @@ public class AccountService {
                 .updatedAt(account.getUpdatedAt())
                 .build();
     }
+
 }

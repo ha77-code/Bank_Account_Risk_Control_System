@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TransactionResponse {
     private Long id;
-    private String transationNo;
+    private String transactionNo;
     private String fromAccountNo;
     private String toAccountNo;
     private BigDecimal amount;
