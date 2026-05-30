@@ -51,6 +51,11 @@ Bank_Account_Risk_Control_System_spring/
 │   ├── package.json
 │   └── package-lock.json
 ├── src/                            # Spring Boot 后端源码
+│   └── main/
+│       └── resources/
+│           └── static/             # 前端构建产物（自动生成）
+│               ├── index.html
+│               └── assets/
 ├── pom.xml
 ├── mvnw
 └── mvnw.cmd
@@ -63,6 +68,7 @@ Bank_Account_Risk_Control_System_spring/
 - `@` 路径别名在 `vite.config.ts` 和 `tsconfig.json` 中配置，指向 `frontend` 根目录。
 - `frontend/dist` 是执行构建后生成的静态产物，默认不提交到 Git。
 - `frontend/node_modules` 是依赖安装目录，默认不提交到 Git。
+- `src/main/resources/static/` 是 Spring Boot 自动集成的前端产物目录，由 Maven 构建时自动生成。
 
 ## 核心功能
 
@@ -97,7 +103,9 @@ npm.cmd run dev
 
 ## 快速启动
 
-### 1. 启动后端
+### 方式一：一体化启动（推荐）
+
+Maven 构建时会自动执行 `npm install` 和 `npm run build`，并将前端构建产物复制到 `src/main/resources/static/`，Spring Boot 会直接提供前端页面。
 
 Windows：
 
@@ -113,9 +121,9 @@ cd Bank_Account_Risk_Control_System_spring
 ./mvnw spring-boot:run
 ```
 
-后端默认端口：
+启动后访问：
 
-- API 服务：http://localhost:8080
+- **前端页面**：http://localhost:8080
 - Swagger 文档：http://localhost:8080/swagger-ui/index.html
 - Swagger 文档备用路径：http://localhost:8080/swagger-ui.html
 - H2 控制台：http://localhost:8080/h2-console
@@ -128,9 +136,18 @@ User Name: as
 Password: 123456
 ```
 
-### 2. 启动前端
+### 方式二：前后端分离开发（开发模式，支持热更新）
 
-打开一个新的终端：
+打开两个终端：
+
+**终端 1 - 启动后端：**
+
+```powershell
+cd "Bank_Account_Risk_Control_System_spring"
+.\mvnw.cmd spring-boot:run
+```
+
+**终端 2 - 启动前端（热更新）：**
 
 ```powershell
 cd "Bank_Account_Risk_Control_System_spring\frontend"
@@ -138,7 +155,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-前端默认访问地址：
+前端开发服务器默认地址：
 
 ```text
 http://127.0.0.1:5173/
@@ -156,14 +173,14 @@ http://127.0.0.1:5173/
 
 进入前端页面后，可以按以下流程演示完整风控链路：
 
-1. 在“客户开户”面板创建客户，记录或自动填充返回的客户 ID。
-2. 在“账户创建”面板使用客户 ID 创建两个账户，建议每个账户初始余额填写 `10000` 或更高。
-3. 在“转账风控演练”面板点击“填充账户”，自动填入最近两个账户。
+1. 在"客户开户"面板创建客户，记录或自动填充返回的客户 ID。
+2. 在"账户创建"面板使用客户 ID 创建两个账户，建议每个账户初始余额填写 `10000` 或更高。
+3. 在"转账风控演练"面板点击"填充账户"，自动填入最近两个账户。
 4. 发起一笔正常转账，例如 `1000`，查看交易结果和账户余额变化。
-5. 点击“大额测试”或手动输入 `60000`，发起转账触发大额风控拦截。
-6. 在“账户查询与控制”面板查询付款账户，然后点击“冻结”。
+5. 点击"大额测试"或手动输入 `60000`，发起转账触发大额风控拦截。
+6. 在"账户查询与控制"面板查询付款账户，然后点击"冻结"。
 7. 再次使用冻结账户发起转账，触发冻结账户风控拦截。
-8. 查看“风控拦截记录”和“审计日志”，确认所有关键操作均被追踪。
+8. 查看"风控拦截记录"和"审计日志"，确认所有关键操作均被追踪。
 
 前端页面包含以下主要区域：
 
@@ -210,13 +227,23 @@ Bank_Account_Risk_Control_System_spring/frontend/dist
 npm.cmd run preview
 ```
 
-如果需要把前端作为 Spring Boot 静态资源一起发布，可以在执行 `npm.cmd run build` 后，将 `frontend/dist` 中的文件复制到：
+## 前端集成到 Spring Boot
 
-```text
-Bank_Account_Risk_Control_System_spring/src/main/resources/static
+本项目已配置 Maven 自动集成：执行 `.\mvnw.cmd spring-boot:run` 或 `.\mvnw.cmd package` 时，会自动：
+
+1. 在 `frontend/` 目录执行 `npm install`（安装前端依赖）
+2. 执行 `npm run build`（构建前端）
+3. 将 `frontend/dist/` 中的文件复制到 `src/main/resources/static/`
+
+这样 Spring Boot 启动后，访问 `http://localhost:8080` 即可直接看到前端页面，无需额外启动前端开发服务器。
+
+如果只想手动构建前端并集成，也可以：
+
+```powershell
+cd "Bank_Account_Risk_Control_System_spring\frontend"
+npm.cmd run build
+xcopy /E /Y dist\* "..\src\main\resources\static\"
 ```
-
-当前项目默认采用“后端 8080 + 前端 5173”的开发方式。
 
 ## shadcn / Tailwind 说明
 
